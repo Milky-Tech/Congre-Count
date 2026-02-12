@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+// import { LuAlertCircle } from 'react-icons/lu';
 
 interface CameraViewProps {
   onVideoReady: (video: HTMLVideoElement) => void;
@@ -24,7 +24,7 @@ export function CameraView({ onVideoReady, isActive }: CameraViewProps) {
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            facingMode: 'environment',
+            facingMode: "environment",
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
@@ -47,8 +47,10 @@ export function CameraView({ onVideoReady, isActive }: CameraViewProps) {
         };
       } catch (err) {
         if (mounted) {
-          console.error('Error accessing camera:', err);
-          setError('Unable to access camera. Please ensure camera permissions are granted.');
+          console.error("Error accessing camera:", err);
+          setError(
+            "Unable to access camera. Please ensure camera permissions are granted.",
+          );
           setIsLoading(false);
         }
       }
@@ -94,7 +96,7 @@ export function CameraView({ onVideoReady, isActive }: CameraViewProps) {
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 p-4">
           <div className="bg-red-500 text-white p-4 rounded-lg flex items-start space-x-3 max-w-md">
-            <AlertCircle className="flex-shrink-0 mt-0.5" />
+            {/* <LuAlertCircle className="flex-shrink-0 mt-0.5" /> */}
             <p>{error}</p>
           </div>
         </div>

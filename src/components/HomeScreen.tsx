@@ -1,4 +1,4 @@
-import { Camera, Users, Shield } from 'lucide-react';
+import { LuCamera, LuUsers, LuShield } from 'react-icons/lu';
 
 interface HomeScreenProps {
   onStart: () => void;
@@ -11,7 +11,7 @@ export function HomeScreen({ onStart, isLoading }: HomeScreenProps) {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-full mb-4">
-            <Users className="w-10 h-10 text-white" />
+            <LuUsers className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Attendance Counter
@@ -23,7 +23,7 @@ export function HomeScreen({ onStart, isLoading }: HomeScreenProps) {
 
         <div className="space-y-4 mb-8">
           <div className="flex items-start space-x-3">
-            <Camera className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <LuCamera className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Point Camera at Entrance</h3>
               <p className="text-sm text-gray-600">
@@ -33,7 +33,7 @@ export function HomeScreen({ onStart, isLoading }: HomeScreenProps) {
           </div>
 
           <div className="flex items-start space-x-3">
-            <Users className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <LuUsers className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Automatic Detection</h3>
               <p className="text-sm text-gray-600">
@@ -43,7 +43,7 @@ export function HomeScreen({ onStart, isLoading }: HomeScreenProps) {
           </div>
 
           <div className="flex items-start space-x-3">
-            <Shield className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+            <LuShield className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Privacy Protected</h3>
               <p className="text-sm text-gray-600">

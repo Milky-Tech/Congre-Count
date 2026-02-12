@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
-import { HomeScreen } from './components/HomeScreen';
-import { RunningScreen } from './components/RunningScreen';
-import { SummaryScreen } from './components/SummaryScreen';
-import { useSession } from './hooks/useSession';
-import { loadModels } from './utils/faceDetection';
-import { exportToCSV } from './utils/csvExport';
-import { AppScreen } from './types';
+import { useState, useEffect } from "react";
+import { HomeScreen } from "./components/HomeScreen";
+import { RunningScreen } from "./components/RunningScreen";
+import { SummaryScreen } from "./components/SummaryScreen";
+import { useSession } from "./hooks/useSession";
+import { initHuman } from "./utils/humanModel";
+import { initFaceDatabase } from "./utils/faceMemory";
+import { exportToCSV } from "./utils/csvExport";
+import { AppScreen } from "./types";
 
 function App() {
-  const [screen, setScreen] = useState<AppScreen>('home');
+  const [screen, setScreen] = useState<AppScreen>("home");
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [modelsReady, setModelsReady] = useState(false);
 
@@ -22,34 +23,38 @@ function App() {
   } = useSession();
 
   useEffect(() => {
-    async function initModels() {
+    async function prepareAI() {
       try {
         setIsLoadingModels(true);
-        await loadModels();
+        console.log("🤖 Starting AI model initialization...");
+        console.log("📦 Initializing face database...");
+        await initFaceDatabase();
+        await initHuman();
+        console.log("✅ AI models and database ready!");
         setModelsReady(true);
       } catch (err) {
-        console.error('Failed to load models:', err);
+        console.error("❌ Failed to initialize:", err);
       } finally {
         setIsLoadingModels(false);
       }
     }
 
-    initModels();
+    prepareAI();
   }, []);
 
   const handleStart = async () => {
     if (!modelsReady) {
-      alert('Models are still loading. Please wait...');
+      alert("Models are still loading. Please wait...");
       return;
     }
 
     startSession();
-    setScreen('running');
+    setScreen("running");
   };
 
   const handleStop = () => {
     stopSession();
-    setScreen('summary');
+    setScreen("summary");
   };
 
   const handleExport = () => {
@@ -57,16 +62,19 @@ function App() {
   };
 
   const handleNewSession = () => {
-    setScreen('home');
+    setScreen("home");
   };
 
   return (
     <>
-      {screen === 'home' && (
-        <HomeScreen onStart={handleStart} isLoading={isLoadingModels || !modelsReady} />
+      {screen === "home" && (
+        <HomeScreen
+          onStart={handleStart}
+          isLoading={isLoadingModels || !modelsReady}
+        />
       )}
 
-      {screen === 'running' && (
+      {screen === "running" && (
         <RunningScreen
           onStop={handleStop}
           onVideoReady={setVideoElement}
@@ -75,7 +83,7 @@ function App() {
         />
       )}
 
-      {screen === 'summary' && (
+      {screen === "summary" && (
         <SummaryScreen
           sessionData={sessionData}
           onExport={handleExport}

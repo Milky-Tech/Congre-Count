@@ -1,31 +1,52 @@
-import { DetectedPerson, Gender, AgeGroup, SessionStats } from '../types';
-import { isMatchingPerson } from './faceDetection';
+import { DetectedPerson, Gender, AgeGroup, SessionStats } from "../types";
+import { calculateSimilarity } from "./faceMemory";
 
 export function generatePersonId(): string {
   return `person_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 export function classifyAgeGroup(age: number): AgeGroup {
-  return age <= 10 ? 'child' : 'adult';
+  return age <= 10 ? "child" : "adult";
 }
 
 export function findMatchingPerson(
   descriptor: Float32Array,
   persons: DetectedPerson[],
-  threshold: number = 0.6
+  threshold: number = 0.58,
 ): DetectedPerson | null {
+  if (persons.length === 0) return null;
+
+  // Find the BEST matching person instead of just first match
+  let bestMatch: DetectedPerson | null = null;
+  let bestSimilarity = 0;
+
   for (const person of persons) {
-    if (isMatchingPerson(descriptor, person.descriptor, threshold)) {
-      return person;
+    const similarity = calculateSimilarity(descriptor, person.descriptor);
+
+    if (similarity > bestSimilarity) {
+      bestSimilarity = similarity;
+      bestMatch = person;
     }
   }
+
+  if (bestMatch && bestSimilarity > threshold) {
+    console.log(
+      `✅ Person matched in session (ID: ${bestMatch.id}, similarity: ${bestSimilarity.toFixed(4)})`,
+    );
+    return bestMatch;
+  } else if (bestMatch) {
+    console.log(
+      `⚠️ Best session match (${bestSimilarity.toFixed(4)}) below threshold (${threshold}) - treating as new person`,
+    );
+  }
+
   return null;
 }
 
 export function createNewPerson(
   descriptor: Float32Array,
   gender: Gender,
-  age: number
+  age: number,
 ): DetectedPerson {
   return {
     id: generatePersonId(),
@@ -60,13 +81,13 @@ export function calculateStats(persons: DetectedPerson[]): SessionStats {
   persons.forEach((person) => {
     stats.totalAppearances += person.appearances;
 
-    if (person.ageGroup === 'child') {
+    if (person.ageGroup === "child") {
       stats.children++;
     } else {
       stats.adults++;
     }
 
-    if (person.gender === 'male') {
+    if (person.gender === "male") {
       stats.males++;
     } else {
       stats.females++;
@@ -76,7 +97,10 @@ export function calculateStats(persons: DetectedPerson[]): SessionStats {
   return stats;
 }
 
-export function shouldProcessPerson(person: DetectedPerson, cooldownMs: number = 5000): boolean {
+export function shouldProcessPerson(
+  person: DetectedPerson,
+  cooldownMs: number = 5000,
+): boolean {
   const timeSinceLastSeen = Date.now() - person.lastSeen.getTime();
   return timeSinceLastSeen >= cooldownMs;
 }
