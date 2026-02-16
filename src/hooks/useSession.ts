@@ -2,11 +2,9 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { SessionData } from "../types";
 import { detectHumanFaces } from "../utils/humanModel";
 import {
-  findMatchingPerson,
   createNewPerson,
   updatePersonAppearance,
   calculateStats,
-  shouldProcessPerson,
 } from "../utils/personTracking";
 import {
   findMatchingFaceInMemory,
@@ -132,100 +130,79 @@ export function useSession() {
 
       setDetectionStatus(`📹 Processing ${detections.length} face(s)...`);
 
-      const updatedPersons = await Promise.all(
-        detections.map(async (detection) => {
-          // First, check if this face is already in the current session
-          setSessionData((prevData) => {
-            const matchingPerson = findMatchingPerson(
-              detection.descriptor,
-              prevData.persons,
-            );
+      // Process each detection separately to avoid complex async state updates
+      const updatedPersons: Array<{
+        newPerson: SessionData["persons"][0];
+        isNew: boolean;
+      }> = [];
 
-            if (matchingPerson && shouldProcessPerson(matchingPerson)) {
-              // Already detected in this session - update appearance
-              const newPersons = [...prevData.persons];
-              const index = newPersons.findIndex(
-                (p) => p.id === matchingPerson.id,
-              );
-              newPersons[index] = updatePersonAppearance(matchingPerson);
-              updateFaceMemory(matchingPerson.id, sessionIdRef.current);
-              return {
-                ...prevData,
-                persons: newPersons,
-                stats: calculateStats(newPersons),
-              };
-            }
-            return prevData;
-          });
+      for (const detection of detections) {
+        // Check face memory
+        const memoryMatch = await findMatchingFaceInMemory(
+          detection.descriptor,
+        );
 
-          // Check face memory
-          const memoryMatch = await findMatchingFaceInMemory(
+        if (memoryMatch) {
+          // Face was seen before - reuse their ID in this session
+          const newPerson = createNewPerson(
             detection.descriptor,
+            detection.gender,
+            detection.age,
+          );
+          // Use the stored person ID to link to their history
+          newPerson.id = memoryMatch.id;
+
+          await updateFaceMemory(memoryMatch.id, sessionIdRef.current);
+
+          console.log(
+            `👤 Returning person detected (seen before: ${memoryMatch.detectionCount} times)`,
           );
 
-          if (memoryMatch) {
-            // Face was seen before - reuse their ID in this session
-            const newPerson = createNewPerson(
-              detection.descriptor,
-              detection.gender,
-              detection.age,
-            );
-            // Use the stored person ID to link to their history
-            newPerson.id = memoryMatch.id;
+          updatedPersons.push({ newPerson, isNew: false });
+        } else {
+          // Completely new person - create and store
+          const newPerson = createNewPerson(
+            detection.descriptor,
+            detection.gender,
+            detection.age,
+          );
 
-            await updateFaceMemory(memoryMatch.id, sessionIdRef.current);
+          await addToFaceMemory(
+            detection.descriptor,
+            detection.gender,
+            detection.age,
+            newPerson.id,
+            sessionIdRef.current,
+          );
 
-            console.log(
-              `👤 Returning person detected (seen before: ${memoryMatch.detectionCount} times)`,
-            );
-
-            return { newPerson, isNew: false };
-          } else {
-            // Completely new person - create and store
-            const newPerson = createNewPerson(
-              detection.descriptor,
-              detection.gender,
-              detection.age,
-            );
-
-            await addToFaceMemory(
-              detection.descriptor,
-              detection.gender,
-              detection.age,
-              newPerson.id,
-              sessionIdRef.current,
-            );
-
-            return { newPerson, isNew: true };
-          }
-        }),
-      );
-
-      // Count only new unique persons
-      let newDetections = 0;
-      updatedPersons.forEach((result) => {
-        if (
-          result &&
-          typeof result === "object" &&
-          "newPerson" in result &&
-          result.isNew
-        ) {
-          newDetections++;
+          updatedPersons.push({ newPerson, isNew: true });
         }
-      });
+      }
 
+      // Update session data once with all processed persons
       setSessionData((prevData) => {
         const finalPersons = [...prevData.persons];
+        let newDetections = 0;
 
-        // Add only truly new persons (not seen in memory)
+        // Add only truly new persons (not seen in current session)
         updatedPersons.forEach((result) => {
-          if (
-            result &&
-            typeof result === "object" &&
-            "newPerson" in result &&
-            !finalPersons.find((p) => p.id === result.newPerson.id)
-          ) {
-            finalPersons.push(result.newPerson);
+          if (result && typeof result === "object" && "newPerson" in result) {
+            const personExists = finalPersons.find(
+              (p) => p.id === result.newPerson.id,
+            );
+
+            if (!personExists) {
+              finalPersons.push(result.newPerson);
+              if (result.isNew) {
+                newDetections++;
+              }
+            } else if (!result.isNew) {
+              // Update existing person's appearance count
+              const index = finalPersons.findIndex(
+                (p) => p.id === result.newPerson.id,
+              );
+              finalPersons[index] = updatePersonAppearance(finalPersons[index]);
+            }
           }
         });
 
@@ -233,7 +210,7 @@ export function useSession() {
 
         if (newDetections > 0) {
           console.log(
-            `✅ ${newDetections} NEW unique person(s)! Total unique this session: ${finalPersons.filter((p) => p.appearances === 1 && !prevData.persons.find((pp) => pp.id === p.id)).length}`,
+            `✅ ${newDetections} NEW unique person(s)! Session total: ${newStats.uniquePersons}`,
           );
           setDetectionStatus(
             `✅ ${newDetections} unique new person(s)! Session total: ${newStats.uniquePersons}`,

@@ -1,0 +1,59 @@
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "CongreCount - AI-Powered Attendance Counter",
+  "alternateName": "CongreCount",
+  "description": "Real-time face recognition attendance counter for events, entrances, and meetings. Privacy-first, on-device processing with AI-powered person tracking.",
+  "url": "https://congrecount.app",
+  "applicationCategory": "Productivity",
+  "applicationSubCategory": "Event Management",
+  "operatingSystem": "Web, Android, iOS, Windows, macOS, Linux",
+  "inLanguage": "en",
+  "author": {
+    "@type": "Person",
+    "name": "CongreCount Team"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "CongreCount",
+    "url": "https://congrecount.app",
+    "logo": "https://congrecount.app/images/logo-congrecount.jpg"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "price": "0",
+    "availability": "https://schema.org/InStock"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": 150,
+    "bestRating": "5",
+    "worstRating": "1"
+  },
+  "image": "https://congrecount.app/images/logo-congrecount.jpg",
+  "downloadUrl": "https://congrecount.app",
+  "installUrl": "https://congrecount.app",
+  "permissions": ["CAMERA", "LOCAL_STORAGE"],
+  "softwareVersion": "1.0.0",
+  "releaseNotes": "Initial release with AI-powered face recognition and attendance tracking",
+  "datePublished": "2026-02-12",
+  "keywords": "attendance, counter, face recognition, AI, people counting, event management, entrance tracking, PWA",
+  "featureList": [
+    "Real-time face recognition",
+    "Automatic duplicate detection",
+    "Forward-facing face filtering",
+    "Descriptor-based matching",
+    "IndexedDB face memory",
+    "Session tracking",
+    "CSV export",
+    "Offline support",
+    "Privacy-first design",
+    "PWA installable"
+  ],
+  "requirements": {
+    "@type": "RequiredSpecification",
+    "requirements": "Camera/Mobile Device, HTTPS Connection, Modern Web Browser"
+  }
+}

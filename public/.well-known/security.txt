@@ -1,0 +1,6 @@
+Contact: security@congrecount.app
+Expires: 2027-02-12T00:00:00Z
+Preferred-Languages: en
+Canonical: https://congrecount.app/.well-known/security.txt
+Policy: https://congrecount.app/privacy
+Acknowledgments: https://congrecount.app/credits

@@ -1,0 +1,43 @@
+# CongreCount - Robots.txt
+# Crawling rules for search engines and bots
+
+User-agent: *
+Allow: /
+Allow: /manifest.json
+Allow: /images/
+Disallow: /private/
+
+User-agent: Googlebot
+Allow: /
+Allow: /manifest.json
+Allow: /images/
+
+User-agent: Bingbot
+Allow: /
+Allow: /manifest.json
+Allow: /images/
+
+# Specific rules for social media crawlers
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Sitemaps
+Sitemap: https://congrecount.app/sitemap.xml
+
+# Crawl delay (requests per second)
+Crawl-delay: 1

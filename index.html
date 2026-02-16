@@ -2,17 +2,103 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/images/logo-congrecount.jpg" />
+
+    <!-- Viewport and Basic Meta Tags -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Passive People Counting Attendance MVP</title>
-    <meta property="og:image" content="/images/logo-congrecount.jpg" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="/images/logo-congrecount.jpg" />
-    <link rel="manifest" href="/manifest.json" />
+    <meta
+      name="description"
+      content="CongreCount - Advanced AI-powered attendance counter using real-time face recognition and person tracking. Easy, accurate, and privacy-preserving people counting for events and entrances."
+    />
+    <meta
+      name="keywords"
+      content="attendance, counter, face recognition, AI, people counting, event management, entrance tracking"
+    />
+    <meta name="author" content="CongreCount Team" />
+    <meta name="language" content="English" />
+
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#2563eb" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="CongreCount" />
+
+    <!-- App Icons -->
+    <link rel="icon" type="image/svg+xml" href="/images/logo-congrecount.jpg" />
+    <link rel="apple-touch-icon" href="/images/logo-congrecount.jpg" />
+    <link
+      rel="shortcut icon"
+      href="/images/logo-congrecount.jpg"
+      type="image/jpg"
+    />
+
+    <!-- Manifest and Service Worker -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph Meta Tags (Social Media) -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="CongreCount - AI-Powered Attendance Counter"
+    />
+    <meta
+      property="og:description"
+      content="Real-time face recognition attendance counter for events, entrances, and meetings. Privacy-first, on-device processing."
+    />
+    <meta property="og:image" content="/images/logo-congrecount.jpg" />
+    <meta
+      property="og:image:alt"
+      content="CongreCount Logo - AI Attendance Counter"
+    />
+    <meta property="og:url" content="https://congrecount.app" />
+    <meta property="og:site_name" content="CongreCount" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="CongreCount - AI-Powered Attendance Counter"
+    />
+    <meta
+      name="twitter:description"
+      content="Real-time face recognition attendance counter using AI. Privacy-first, on-device processing for events and entrances."
+    />
+    <meta name="twitter:image" content="/images/logo-congrecount.jpg" />
+    <meta name="twitter:image:alt" content="CongreCount - Attendance Counter" />
+
+    <!-- Additional SEO Meta Tags -->
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="revisit-after" content="7 days" />
+    <meta name="rating" content="general" />
+
+    <!-- Preconnect to External Resources -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+
+    <title>CongreCount - AI-Powered Attendance Counter</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("✅ Service Worker registered:", registration);
+            })
+            .catch((err) => {
+              console.error("❌ Service Worker registration failed:", err);
+            });
+        });
+      }
+    </script>
   </body>
 </html>

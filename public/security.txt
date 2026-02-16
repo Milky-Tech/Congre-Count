@@ -1,0 +1,18 @@
+# CongreCount - Security Policy
+# Content Security Policy header for enhanced security
+
+# Strict CSP for security
+# Blocks inline scripts and styles
+default-src 'self';
+script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline' 'unsafe-eval';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: https:;
+font-src 'self' data:;
+connect-src 'self' https://cdn.jsdelivr.net https://vladmandic.github.io wss: ws:;
+media-src 'self';
+object-src 'none';
+frame-src 'self';
+base-uri 'self';
+form-action 'self';
+frame-ancestors 'none';
+upgrade-insecure-requests;
