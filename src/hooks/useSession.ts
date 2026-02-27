@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { SessionData } from "../types";
+import { SessionData, ModelPreference } from "../types";
 import { detectHumanFaces } from "../utils/humanModel";
+import { detectOnnxFaces } from "../utils/onnxModel";
 import {
   createNewPerson,
   updatePersonAppearance,
@@ -36,17 +37,12 @@ function reviveSessionData(data: unknown): SessionData {
   };
 }
 
-export function useSession() {
+export function useSession(modelPreference: ModelPreference = 'fast') {
   const [isRunning, setIsRunning] = useState(false);
   const [sessionData, setSessionData] = useState<SessionData>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        return reviveSessionData(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse saved session", e);
-      }
-    }
+    // Clear the storage on app/hook load so it always starts fresh
+    localStorage.removeItem(STORAGE_KEY);
+    
     return {
       persons: [],
       stats: {
@@ -120,7 +116,9 @@ export function useSession() {
     isProcessingRef.current = true;
 
     try {
-      const detections = await detectHumanFaces(videoRef.current);
+      const detections = modelPreference === 'accurate' 
+        ? await detectOnnxFaces(videoRef.current)
+        : await detectHumanFaces(videoRef.current);
 
       if (detections.length === 0) {
         setDetectionStatus("⏳ Waiting for faces...");
@@ -233,7 +231,7 @@ export function useSession() {
     } finally {
       isProcessingRef.current = false;
     }
-  }, [isRunning]);
+  }, [isRunning, modelPreference]);
 
   useEffect(() => {
     if (isRunning && videoRef.current) {

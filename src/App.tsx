@@ -6,10 +6,11 @@ import { useSession } from "./hooks/useSession";
 import { initHuman } from "./utils/humanModel";
 import { initFaceDatabase } from "./utils/faceMemory";
 import { exportToCSV } from "./utils/csvExport";
-import { AppScreen } from "./types";
+import { AppScreen, ModelPreference } from "./types";
 
 function App() {
   const [screen, setScreen] = useState<AppScreen>("home");
+  const [modelPreference, setModelPreference] = useState<ModelPreference>("fast");
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [modelsReady, setModelsReady] = useState(false);
 
@@ -20,7 +21,7 @@ function App() {
     startSession,
     stopSession,
     setVideoElement,
-  } = useSession();
+  } = useSession(modelPreference);
 
   useEffect(() => {
     async function prepareAI() {
@@ -29,7 +30,17 @@ function App() {
         console.log("🤖 Starting AI model initialization...");
         console.log("📦 Initializing face database...");
         await initFaceDatabase();
-        await initHuman();
+        
+        console.log("🧹 Clearing cached face memory on start...");
+        const { clearFaceMemory } = await import("./utils/faceMemory");
+        await clearFaceMemory();
+
+        if (modelPreference === "fast") {
+            await initHuman();
+        } else {
+            const { initOnnxModels } = await import("./utils/onnxModel");
+            await initOnnxModels();
+        }
         console.log("✅ AI models and database ready!");
         setModelsReady(true);
       } catch (err) {
@@ -39,8 +50,9 @@ function App() {
       }
     }
 
+    setModelsReady(false);
     prepareAI();
-  }, []);
+  }, [modelPreference]);
 
   const handleStart = async () => {
     if (!modelsReady) {
@@ -71,6 +83,8 @@ function App() {
         <HomeScreen
           onStart={handleStart}
           isLoading={isLoadingModels || !modelsReady}
+          modelPreference={modelPreference}
+          onChangeModelPreference={setModelPreference}
         />
       )}
 

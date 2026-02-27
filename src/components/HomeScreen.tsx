@@ -1,11 +1,14 @@
-import { LuCamera, LuUsers, LuShield } from 'react-icons/lu';
+import { LuCamera, LuUsers, LuShield, LuZap, LuTarget } from 'react-icons/lu';
+import { ModelPreference } from '../types';
 
 interface HomeScreenProps {
   onStart: () => void;
   isLoading: boolean;
+  modelPreference: ModelPreference;
+  onChangeModelPreference: (pref: ModelPreference) => void;
 }
 
-export function HomeScreen({ onStart, isLoading }: HomeScreenProps) {
+export function HomeScreen({ onStart, isLoading, modelPreference, onChangeModelPreference }: HomeScreenProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
@@ -50,6 +53,36 @@ export function HomeScreen({ onStart, isLoading }: HomeScreenProps) {
                 No images stored - all processing happens on your device
               </p>
             </div>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Detection Strategy</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => onChangeModelPreference('fast')}
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                modelPreference === 'fast'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50 text-gray-600'
+              }`}
+            >
+              <LuZap className={`w-6 h-6 mb-2 ${modelPreference === 'fast' ? 'text-blue-600' : 'text-gray-400'}`} />
+              <span className={`font-semibold ${modelPreference === 'fast' ? 'text-blue-900' : 'text-gray-700'}`}>Fast Detection</span>
+              <span className="text-xs text-center mt-1 text-gray-500">Optimized for older devices (@vladmandic)</span>
+            </button>
+            <button
+              onClick={() => onChangeModelPreference('accurate')}
+              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
+                modelPreference === 'accurate'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50 text-gray-600'
+              }`}
+            >
+              <LuTarget className={`w-6 h-6 mb-2 ${modelPreference === 'accurate' ? 'text-blue-600' : 'text-gray-400'}`} />
+              <span className={`font-semibold ${modelPreference === 'accurate' ? 'text-blue-900' : 'text-gray-700'}`}>High Accuracy</span>
+              <span className="text-xs text-center mt-1 text-gray-500">More reliable tracking (YOLOv8 + ONNX)</span>
+            </button>
           </div>
         </div>
 

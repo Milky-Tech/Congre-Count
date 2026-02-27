@@ -29,3 +29,4 @@ export interface SessionData {
 }
 
 export type AppScreen = 'home' | 'running' | 'summary';
+export type ModelPreference = 'fast' | 'accurate';
