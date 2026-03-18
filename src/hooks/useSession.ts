@@ -234,7 +234,9 @@ export function useSession(modelPreference: ModelPreference = 'fast') {
   }, [isRunning, modelPreference]);
 
   useEffect(() => {
-    if (isRunning && videoRef.current) {
+    if (isRunning) {
+      // Start the interval regardless of whether the video is ready yet.
+      // processFaces() already guards against a null videoRef internally.
       detectionIntervalRef.current = window.setInterval(() => {
         processFaces();
       }, 1500);
@@ -243,6 +245,7 @@ export function useSession(modelPreference: ModelPreference = 'fast') {
     return () => {
       if (detectionIntervalRef.current) {
         clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
       }
     };
   }, [isRunning, processFaces]);

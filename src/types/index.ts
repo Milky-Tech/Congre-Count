@@ -1,5 +1,5 @@
-export type Gender = 'male' | 'female';
-export type AgeGroup = 'child' | 'adult';
+export type Gender = 'male' | 'female' | 'unknown';
+export type AgeGroup = 'child' | 'adult' | 'unknown';
 
 export interface DetectedPerson {
   id: string;

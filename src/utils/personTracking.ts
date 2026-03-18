@@ -6,6 +6,7 @@ export function generatePersonId(): string {
 }
 
 export function classifyAgeGroup(age: number): AgeGroup {
+  if (age <= 0) return "unknown";
   return age <= 10 ? "child" : "adult";
 }
 
@@ -83,13 +84,13 @@ export function calculateStats(persons: DetectedPerson[]): SessionStats {
 
     if (person.ageGroup === "child") {
       stats.children++;
-    } else {
+    } else if (person.ageGroup === "adult") {
       stats.adults++;
     }
 
     if (person.gender === "male") {
       stats.males++;
-    } else {
+    } else if (person.gender === "female") {
       stats.females++;
     }
   });

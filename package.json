@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "postinstall": "if not exist public\\ort-assets mkdir public\\ort-assets && copy node_modules\\onnxruntime-web\\dist\\*.wasm public\\ort-assets\\ && copy node_modules\\onnxruntime-web\\dist\\*.mjs public\\ort-assets\\ && powershell -Command \"Get-ChildItem -Path public\\ort-assets\\*.mjs | ForEach-Object { Rename-Item -Path $_.FullName -NewName ($_.Name -replace '\\.mjs$', '.js') -Force }\""
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

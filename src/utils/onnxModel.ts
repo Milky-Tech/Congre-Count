@@ -14,8 +14,16 @@ let yoloSession: ort.InferenceSession | null = null;
 let reidSession: ort.InferenceSession | null = null;
 
 // Sets up ONNX Runtime Web WebGL/WASM execution providers
-ort.env.wasm.numThreads = 1;
+ort.env.wasm.numThreads = 2; // Increase threads to match available -threaded wasm files
 ort.env.wasm.simd = true;
+// Map the .mjs files to .js to bypass Vite's strict "should not be imported from public" error
+ort.env.wasm.wasmPaths = {
+  'ort-wasm-simd-threaded.wasm': '/ort-assets/ort-wasm-simd-threaded.wasm',
+  'ort-wasm-simd-threaded.mjs': '/ort-assets/ort-wasm-simd-threaded.js',
+  'ort-wasm-simd-threaded.jsep.mjs': '/ort-assets/ort-wasm-simd-threaded.jsep.js',
+  'ort-wasm-simd-threaded.jspi.mjs': '/ort-assets/ort-wasm-simd-threaded.jspi.js',
+  'ort-wasm-simd-threaded.asyncify.mjs': '/ort-assets/ort-wasm-simd-threaded.asyncify.js',
+};
 
 /**
  * Initialize ONNX Runtime Inference Sessions for Detection and ReID
@@ -55,28 +63,29 @@ export async function initOnnxModels(): Promise<void> {
  */
 function preprocessVideoForYolo(videoElement: HTMLVideoElement): ort.Tensor {
   const canvas = document.createElement('canvas');
-  canvas.width = 640;
-  canvas.height = 640;
+  const size = 320;
+  canvas.width = size;
+  canvas.height = size;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2D context');
 
-  // Draw video frame to canvas, resizing it to 640x640
-  ctx.drawImage(videoElement, 0, 0, 640, 640);
+  // Draw video frame to canvas, resizing it to 320x320
+  ctx.drawImage(videoElement, 0, 0, size, size);
 
-  const imgData = ctx.getImageData(0, 0, 640, 640);
+  const imgData = ctx.getImageData(0, 0, size, size);
   const data = imgData.data;
 
   // YOLO expected format: NCHW, RGB, normalized to [0, 1]
-  const float32Data = new Float32Array(3 * 640 * 640);
+  const float32Data = new Float32Array(3 * size * size);
 
   // Convert RGBA -> RGB and normalize
-  for (let i = 0; i < 640 * 640; i++) {
+  for (let i = 0; i < size * size; i++) {
     float32Data[i] = data[i * 4] / 255.0;            // R
-    float32Data[640 * 640 + i] = data[i * 4 + 1] / 255.0;  // G
-    float32Data[2 * 640 * 640 + i] = data[i * 4 + 2] / 255.0;  // B
+    float32Data[size * size + i] = data[i * 4 + 1] / 255.0;  // G
+    float32Data[2 * size * size + i] = data[i * 4 + 2] / 255.0;  // B
   }
 
-  return new ort.Tensor('float32', float32Data, [1, 3, 640, 640]);
+  return new ort.Tensor('float32', float32Data, [1, 3, size, size]);
 }
 
 /**
@@ -84,43 +93,58 @@ function preprocessVideoForYolo(videoElement: HTMLVideoElement): ort.Tensor {
  * Returns Array of boxes: [x, y, w, h] roughly scaled back to video dimensions
  */
 function processYoloOutput(outputTensor: ort.Tensor, origWidth: number, origHeight: number): [number, number, number, number][] {
-  // YOLOv8 output is [1, 84, 8400] roughly speaking (box data + classes)
   const data = outputTensor.data as Float32Array;
   const dims = outputTensor.dims;
   
-  if (dims.length !== 3) return [];
+  if (dims.length !== 3) {
+    console.error('Expected 3D tensor [1, 84, anchors], got:', dims);
+    return [];
+  }
 
-  const numClasses = dims[1] - 4; // First 4 are cx, cy, w, h
-  const numAnchors = dims[2];
+  // Handle both [1, 84, N] and [1, N, 84] formats
+  let numClasses: number;
+  let numAnchors: number;
+  let shapeMode: 'standard' | 'transposed';
+
+  if (dims[1] < dims[2]) {
+     numClasses = dims[1] - 4;
+     numAnchors = dims[2];
+     shapeMode = 'standard';
+  } else {
+     numClasses = dims[2] - 4;
+     numAnchors = dims[1];
+     shapeMode = 'transposed';
+  }
 
   const boxes: [number, number, number, number][] = [];
-  const minConfidence = 0.5;
+  const minConfidence = 0.3; // Low threshold for debugging
 
-  const widthScale = origWidth / 640.0;
-  const heightScale = origHeight / 640.0;
+  const size = 320;
+  const widthScale = origWidth / size;
+  const heightScale = origHeight / size;
 
   for (let i = 0; i < numAnchors; i++) {
-    // Find highest class probability
     let maxProb = 0;
     let maxIdx = -1;
 
     for (let c = 0; c < numClasses; c++) {
-      const prob = data[(4 + c) * numAnchors + i];
+      const prob = shapeMode === 'standard' 
+        ? data[(4 + c) * numAnchors + i]
+        : data[i * (4 + numClasses) + (4 + c)];
+      
       if (prob > maxProb) {
         maxProb = prob;
         maxIdx = c;
       }
     }
 
-    // Class 0 is usually 'person' in COCO dataset
-    if (maxIdx === 0 && maxProb > minConfidence) {
-      // cx, cy, w, h
-      const cx = data[0 * numAnchors + i];
-      const cy = data[1 * numAnchors + i];
-      const w = data[2 * numAnchors + i];
-      const h = data[3 * numAnchors + i];
+    // Class 0 is 'person' in standard COCO-trained YOLOv8
+    if (maxProb > minConfidence && maxIdx === 0) {
+      const cx = shapeMode === 'standard' ? data[0 * numAnchors + i] : data[i * (4 + numClasses) + 0];
+      const cy = shapeMode === 'standard' ? data[1 * numAnchors + i] : data[i * (4 + numClasses) + 1];
+      const w = shapeMode === 'standard' ? data[2 * numAnchors + i] : data[i * (4 + numClasses) + 2];
+      const h = shapeMode === 'standard' ? data[3 * numAnchors + i] : data[i * (4 + numClasses) + 3];
 
-      // Convert to x_min, y_min, width, height (scaled to original video)
       const xMin = (cx - w / 2) * widthScale;
       const yMin = (cy - h / 2) * heightScale;
       const boxW = w * widthScale;
@@ -130,10 +154,6 @@ function processYoloOutput(outputTensor: ort.Tensor, origWidth: number, origHeig
     }
   }
 
-  // NOTE: A real implementation requires Non-Maximum Suppression (NMS) here to remove duplicate boxes!
-  // For simplicity and performance in the browser, if we assume 1-2 sparse people, we can take the highest conf,
-  // or implement a basic NMS.
-  
   return boxes;
 }
 
@@ -219,7 +239,7 @@ export async function detectOnnxFaces(videoElement: HTMLVideoElement): Promise<H
       detections.push({
         descriptor,
         // YOLOv8 doesn't give gender/age by default. We mock them or use default values to satisfy UI.
-        gender: 'unknown' as 'male' | 'female',
+        gender: 'unknown',
         age: 0,
         box: box as [number, number, number, number],
         // YOLOv8 doesn't give 3D mesh roll/pitch/yaw.
