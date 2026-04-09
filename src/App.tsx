@@ -37,9 +37,10 @@ function App() {
 
         if (modelPreference === "fast") {
             await initHuman();
-        } else {
+        } else if (modelPreference === "accurate") {
             const { initOnnxModels } = await import("./utils/onnxModel");
-            await initOnnxModels();
+            // Load both YOLO/ReID and Human models for accurate+classification
+            await Promise.all([initOnnxModels(), initHuman()]);
         }
         console.log("✅ AI models and database ready!");
         setModelsReady(true);

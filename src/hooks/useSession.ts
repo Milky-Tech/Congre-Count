@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { SessionData, ModelPreference } from "../types";
 import { detectHumanFaces } from "../utils/humanModel";
 import { detectOnnxFaces } from "../utils/onnxModel";
+
 import {
   createNewPerson,
   updatePersonAppearance,
@@ -19,6 +20,7 @@ function generateSessionId(): string {
   return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
+/*
 function reviveSessionData(data: unknown): SessionData {
   const parsedData = data as Record<string, unknown>;
   return {
@@ -36,6 +38,7 @@ function reviveSessionData(data: unknown): SessionData {
     stats: parsedData.stats as SessionData["stats"],
   };
 }
+*/
 
 export function useSession(modelPreference: ModelPreference = 'fast') {
   const [isRunning, setIsRunning] = useState(false);
@@ -116,9 +119,14 @@ export function useSession(modelPreference: ModelPreference = 'fast') {
     isProcessingRef.current = true;
 
     try {
-      const detections = modelPreference === 'accurate' 
-        ? await detectOnnxFaces(videoRef.current)
-        : await detectHumanFaces(videoRef.current);
+      let detections = [];
+      
+      if (modelPreference === 'accurate') {
+        detections = await detectOnnxFaces(videoRef.current);
+
+      } else {
+        detections = await detectHumanFaces(videoRef.current);
+      }
 
       if (detections.length === 0) {
         setDetectionStatus("⏳ Waiting for faces...");

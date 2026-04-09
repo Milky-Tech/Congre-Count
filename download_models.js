@@ -22,9 +22,13 @@ async function main() {
     // Using float32 yolov8n model - matches the Float32Array preprocessing in onnxModel.ts
     const YOLO_URL = "https://huggingface.co/flightsnotights/yolov8n_onnx/resolve/main/yolov8n.onnx";
     const REID_URL = "https://huggingface.co/opencv/facial_expression_recognition/resolve/main/facial_expression_recognition_mobilefacenet_2022july.onnx"; 
+    const AGE_URL = "https://huggingface.co/Xenova/age-prediction/resolve/main/onnx/model_quantized.onnx";
+    const GENDER_URL = "https://huggingface.co/Xenova/gender-classification/resolve/main/onnx/model_quantized.onnx";
 
     await download(YOLO_URL, "./public/yolov8n.onnx");
     await download(REID_URL, "./public/mobilefacenet.onnx");
+    await download(AGE_URL, "./public/age-prediction.onnx");
+    await download(GENDER_URL, "./public/gender-classification.onnx");
     console.log("✅ Downloads complete!");
   } catch (err) {
     console.error("❌ Error downloading models:", err.message || err);

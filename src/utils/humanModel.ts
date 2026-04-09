@@ -1,4 +1,5 @@
 import { Human, Config } from "@vladmandic/human";
+import { Gender } from "../types";
 
 let human: Human | null = null;
 
@@ -60,7 +61,7 @@ export async function initHuman(): Promise<Human> {
 
 export interface HumanDetectionResult {
   descriptor: Float32Array;
-  gender: "male" | "female";
+  gender: Gender;
   age: number;
   box: [number, number, number, number]; // [x, y, w, h]
   angle: { roll: number; pitch: number; yaw: number }; // Face orientation
@@ -168,4 +169,60 @@ export function calculateSimilarity(
   }
 
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+/**
+ * Classifies a specific face region detected by another model (e.g., YOLOv8)
+ * using the Human library's gender and age classification.
+ */
+export async function classifyFaceFromBox(
+  videoElement: HTMLVideoElement,
+  box: [number, number, number, number]
+): Promise<{ gender: 'male' | 'female' | 'unknown', age: number }> {
+  if (!human) {
+    console.warn("⚠️ Human library not initialized during classification - returning defaults");
+    return { gender: 'unknown', age: 0 };
+  }
+
+  try {
+    const [x, y, w, h] = box;
+
+    // Create a temporary canvas for the crop
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return { gender: 'unknown', age: 0 };
+
+    // Draw the cropped face from the video
+    // Use Math.max/min to ensure we stay within video bounds
+    ctx.drawImage(
+      videoElement,
+      Math.max(0, x),
+      Math.max(0, y),
+      Math.min(w, videoElement.videoWidth - x),
+      Math.min(h, videoElement.videoHeight - y),
+      0,
+      0,
+      w,
+      h
+    );
+
+    // Run Human detection on the single crop (this will be very fast)
+    const result = await human.detect(canvas);
+
+    if (result.face && result.face.length > 0) {
+      // Take the first face detected in the crop
+      const f = result.face[0];
+      return {
+        gender: (f.gender || 'unknown') as 'male' | 'female' | 'unknown',
+        age: f.age || 0
+      };
+    }
+
+    return { gender: 'unknown', age: 0 };
+  } catch (err) {
+    console.error("❌ Error during face classification:", err);
+    return { gender: 'unknown', age: 0 };
+  }
 }

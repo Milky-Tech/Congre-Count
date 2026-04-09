@@ -1,5 +1,5 @@
 import * as ort from 'onnxruntime-web';
-import { HumanDetectionResult } from './humanModel';
+import { HumanDetectionResult, classifyFaceFromBox } from './humanModel';
 
 // Since we have no backend, we will use known public links or place models in public directory
 // For this implementation, we will point to standard endpoints.
@@ -16,14 +16,13 @@ let reidSession: ort.InferenceSession | null = null;
 // Sets up ONNX Runtime Web WebGL/WASM execution providers
 ort.env.wasm.numThreads = 2; // Increase threads to match available -threaded wasm files
 ort.env.wasm.simd = true;
-// Map the .mjs files to .js to bypass Vite's strict "should not be imported from public" error
 ort.env.wasm.wasmPaths = {
   'ort-wasm-simd-threaded.wasm': '/ort-assets/ort-wasm-simd-threaded.wasm',
   'ort-wasm-simd-threaded.mjs': '/ort-assets/ort-wasm-simd-threaded.js',
   'ort-wasm-simd-threaded.jsep.mjs': '/ort-assets/ort-wasm-simd-threaded.jsep.js',
   'ort-wasm-simd-threaded.jspi.mjs': '/ort-assets/ort-wasm-simd-threaded.jspi.js',
   'ort-wasm-simd-threaded.asyncify.mjs': '/ort-assets/ort-wasm-simd-threaded.asyncify.js',
-};
+} as any;
 
 /**
  * Initialize ONNX Runtime Inference Sessions for Detection and ReID
@@ -236,11 +235,13 @@ export async function detectOnnxFaces(videoElement: HTMLVideoElement): Promise<H
       // For each detected person/face, get the biometric embedding
       const descriptor = await extractEmbedding(videoElement, box);
       
+      // NEW: Get gender and age classification from Human model
+      const classification = await classifyFaceFromBox(videoElement, box as [number, number, number, number]);
+
       detections.push({
         descriptor,
-        // YOLOv8 doesn't give gender/age by default. We mock them or use default values to satisfy UI.
-        gender: 'unknown',
-        age: 0,
+        gender: classification.gender,
+        age: classification.age,
         box: box as [number, number, number, number],
         // YOLOv8 doesn't give 3D mesh roll/pitch/yaw.
         angle: { roll: 0, pitch: 0, yaw: 0 },

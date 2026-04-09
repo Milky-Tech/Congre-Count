@@ -58,7 +58,7 @@ export function HomeScreen({ onStart, isLoading, modelPreference, onChangeModelP
 
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Detection Strategy</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={() => onChangeModelPreference('fast')}
               className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all ${
@@ -68,8 +68,8 @@ export function HomeScreen({ onStart, isLoading, modelPreference, onChangeModelP
               }`}
             >
               <LuZap className={`w-6 h-6 mb-2 ${modelPreference === 'fast' ? 'text-blue-600' : 'text-gray-400'}`} />
-              <span className={`font-semibold ${modelPreference === 'fast' ? 'text-blue-900' : 'text-gray-700'}`}>Fast Detection</span>
-              <span className="text-xs text-center mt-1 text-gray-500">Optimized for older devices (@vladmandic)</span>
+              <span className={`font-semibold text-sm ${modelPreference === 'fast' ? 'text-blue-900' : 'text-gray-700'}`}>Fast</span>
+              <span className="text-[10px] text-center mt-1 text-gray-500 line-clamp-1">Device only</span>
             </button>
             <button
               onClick={() => onChangeModelPreference('accurate')}
@@ -80,9 +80,10 @@ export function HomeScreen({ onStart, isLoading, modelPreference, onChangeModelP
               }`}
             >
               <LuTarget className={`w-6 h-6 mb-2 ${modelPreference === 'accurate' ? 'text-blue-600' : 'text-gray-400'}`} />
-              <span className={`font-semibold ${modelPreference === 'accurate' ? 'text-blue-900' : 'text-gray-700'}`}>High Accuracy</span>
-              <span className="text-xs text-center mt-1 text-gray-500">More reliable tracking (YOLOv8 + ONNX)</span>
+              <span className={`font-semibold text-sm ${modelPreference === 'accurate' ? 'text-blue-900' : 'text-gray-700'}`}>Accurate</span>
+              <span className="text-[10px] text-center mt-1 text-gray-500 line-clamp-1">YOLO + Human</span>
             </button>
+
           </div>
         </div>
 

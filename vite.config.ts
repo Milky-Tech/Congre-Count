@@ -7,4 +7,16 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ["lucide-react", "onnxruntime-web"],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-human': ['@vladmandic/human'],
+          'vendor-onnx': ['onnxruntime-web'],
+          'vendor-react': ['react', 'react-dom'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 2000,
+  },
 });
